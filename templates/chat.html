@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Chat{% endblock %}
+
+{% block head %}
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Chat</h1>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Chat with <span id="partnerName"></span></h5>
+            </div>
+            <div class="card-body">
+                <div id="chatContainer" style="height: 400px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #ccc; padding: 10px;"></div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="chatInput" placeholder="Type a message">
+                    <button class="btn btn-primary" id="sendChatBtn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+        const partnerName = document.getElementById('partnerName');
+        
+        // Get transaction ID and partner name from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const transactionId = urlParams.get('transaction_id');
+        const partner = urlParams.get('partner');
+        
+        if (partner) {
+            partnerName.textContent = partner;
+        }
+        
+        // Initialize Socket.IO
+        const socket = io();
+        
+        // Join transaction room
+        socket.emit('join_transaction', {
+            transaction_id: transactionId,
+            username: '{{ session.username }}'
+        });
+        
+        // Handle incoming chat messages
+        socket.on('new_message', (data) => {
+            appendMessage(data.username, data.message, data.timestamp, data.sender_id === '{{ session.user_id }}');
+        });
+        
+        // Append message to chat container
+        function appendMessage(username, message, timestamp, isOwn = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isOwn ? 'text-end' : 'text-start';
+            
+            const bubble = document.createElement('div');
+            bubble.className = isOwn ? 'd-inline-block p-2 bg-primary text-white rounded mb-2' : 'd-inline-block p-2 bg-light rounded mb-2';
+            bubble.innerHTML = `<strong>${username}:</strong> ${message}<br><small>${new Date(timestamp).toLocaleTimeString()}</small>`;
+            
+            messageDiv.appendChild(bubble);
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Send chat message
+        sendChatBtn.addEventListener('click', function() {
+            if (!chatInput.value.trim()) return;
+            
+            const message = chatInput.value.trim();
+            
+            // Send message via WebSocket
+            socket.emit('send_message', {
+                transaction_id: transactionId,
+                sender_id: '{{ session.user_id }}',
+                message: message
+            });
+            
+            // Append own message immediately
+            appendMessage('{{ session.username }}', message, new Date().toISOString(), true);
+            
+            // Clear input
+            chatInput.value = '';
+        });
+        
+        // Also send on Enter key
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendChatBtn.click();
+            }
+        });
+    });
+</script>
+{% endblock %}

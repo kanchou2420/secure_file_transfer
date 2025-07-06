@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi File Bảo Mật - Secure File Transfer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            margin-bottom: 25px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .card-header {
+            border-radius: 12px 12px 0 0 !important;
+            font-weight: 600;
+            padding: 15px 20px;
+        }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--success));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .security-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        
+        .file-icon {
+            font-size: 24px;
+            color: var(--secondary);
+            margin-right: 10px;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+        
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 8px;
+        }
+        
+        .user-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .user-card:hover {
+            background-color: #e8f4fe;
+            transform: translateY(-3px);
+        }
+        
+        .user-card.selected {
+            background-color: #d1e7ff;
+            border: 2px solid var(--secondary);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            border: none;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .file-drop-area {
+            border: 2px dashed #3498db;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background-color: rgba(52, 152, 219, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 25px;
+        }
+        
+        .file-drop-area:hover, .file-drop-area.dragover {
+            background-color: rgba(52, 152, 219, 0.1);
+            border-color: #2980b9;
+        }
+        
+        .file-info {
+            background-color: #f1f9ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .security-option {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .security-option:hover {
+            border-color: var(--secondary);
+            background-color: #f8f9ff;
+        }
+        
+        .security-option.selected {
+            border-color: var(--secondary);
+            background-color: #e8f4fe;
+        }
+        
+        .security-option i {
+            font-size: 20px;
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+        
+        .recent-file {
+            border-bottom: 1px solid #eee;
+            padding: 12px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .recent-file:hover {
+            background-color: #f8f9ff;
+            padding-left: 10px;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .bg-pending {
+            background-color: #fef5e7;
+            color: #f39c12;
+        }
+        
+        .bg-completed {
+            background-color: #eafaf1;
+            color: #27ae60;
+        }
+        
+        .footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 25px 0;
+            margin-top: 50px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        
+        .encryption-animation {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .encryption-visual {
+            position: relative;
+            height: 120px;
+            margin: 20px auto;
+        }
+        
+        .lock-icon, .key-icon, .file-icon-animated {
+            position: absolute;
+            font-size: 36px;
+            color: var(--secondary);
+        }
+        
+        .lock-icon {
+            left: 10%;
+            top: 40px;
+        }
+        
+        .key-icon {
+            left: 45%;
+            top: 40px;
+        }
+        
+        .file-icon-animated {
+            right: 10%;
+            top: 40px;
+        }
+        
+        .encryption-line {
+            position: absolute;
+            top: 60px;
+            left: 20%;
+            width: 60%;
+            height: 3px;
+            background-color: var(--secondary);
+        }
+        
+        .pulse {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: var(--success);
+            border-radius: 50%;
+            top: 53px;
+            animation: pulseAnimation 2s infinite;
+        }
+        
+        @keyframes pulseAnimation {
+            0% {
+                left: 20%;
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                left: 80%;
+                transform: scale(1);
+            }
+        }
+        
+        .encryption-success {
+            text-align: center;
+            padding: 30px;
+            background-color: #eafaf1;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .encryption-success i {
+            font-size: 48px;
+            color: var(--success);
+            margin-bottom: 15px;
+        }
+        
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="fas fa-lock-shield me-2"></i>
+                <span>SecureTransfer</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home me-1"></i> Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/sender"><i class="fas fa-paper-plane me-1"></i> Gửi File</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/receiver"><i class="fas fa-inbox me-1"></i> Nhận File</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-history me-1"></i> Lịch sử</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar me-3" id="userAvatar">HP</div>
+                    <div>
+                        <div class="text-white fw-bold" id="username">Hoàng Phúc</div>
+                        <div class="text-white-50 small" id="userRole">Quản trị viên</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- File Sending Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-paper-plane me-2"></i> Gửi File Bảo Mật</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Step 1: Select Receiver -->
+                        <div class="mb-4">
+                            <h5><span class="step-number">1</span> Chọn người nhận</h5>
+                            <p class="text-muted">Chọn người bạn muốn gửi file từ danh sách bên dưới</p>
+                            
+                            <div class="loading-indicator" id="usersLoading">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2">Đang tải danh sách người dùng...</p>
+                            </div>
+                            
+                            <div class="row g-3" id="usersContainer">
+                                <!-- Users will be loaded here from database -->
+                            </div>
+                            
+                            <div class="alert alert-danger mt-3" id="usersError" style="display: none;">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <span id="errorMessage">Không thể tải danh sách người dùng</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2: Select File -->
+                        <div class="mb-4">
+                            <h5><span class="step-number">2</span> Chọn file để gửi</h5>
+                            <p class="text-muted">Kéo thả file hoặc nhấp để chọn file từ thiết bị của bạn</p>
+                            
+                            <div class="file-drop-area" id="fileDropArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                <h5>Kéo thả file vào đây</h5>
+                                <p class="text-muted">Hoặc <span class="text-primary">bấm để duyệt</span> file trên thiết bị</p>
+                                <p class="small text-muted">Hỗ trợ tất cả định dạng file, tối đa 100MB</p>
+                                <input type="file" id="fileInput" class="d-none">
+                            </div>
+                            
+                            <div class="file-info" id="fileInfo">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 id="fileName">Báo cáo dự án.pdf</h6>
+                                        <div class="d-flex">
+                                            <small class="me-3"><i class="fas fa-database me-1"></i> <span id="fileSize">4.2 MB</span></small>
+                                            <small><i class="fas fa-clock me-1"></i> <span id="fileModified">5 phút trước</span></small>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger" id="removeFileBtn">
+                                        <i class="fas fa-times me-1"></i> Xóa
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Security Options -->
+                        <div class="mb-4">
+                            <h5><span class="step-number">3</span> Tùy chọn bảo mật</h5>
+                            <p class="text-muted">Tăng cường bảo mật cho file của bạn với các tùy chọn sau</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="security-option" data-option="encrypt">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-lock"></i>
+                                            <div>
+                                                <h6 class="mb-1">Mã hóa nội dung</h6>
+                                                <p class="small mb-0">File được mã hóa từ đầu đến cuối (AES-256)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="security-option" data-option="self-destruct">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-hourglass-half"></i>
+                                            <div>
+                                                <h6 class="mb-1">Tự hủy sau khi đọc</h6>
+                                                <p class="small mb-0">File sẽ tự động xóa sau khi người nhận xem</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="security-option" data-option="password">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-key"></i>
+                                            <div>
+                                                <h6 class="mb-1">Mật khẩu bảo vệ</h6>
+                                                <p class="small mb-0">Yêu cầu mật khẩu để mở file</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="security-option" data-option="watermark">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-tag"></i>
+                                            <div>
+                                                <h6 class="mb-1">Watermark</h6>
+                                                <p class="small mb-0">Thêm watermark vào file PDF/ảnh</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Password Input (Conditional) -->
+                            <div class="mt-3" id="passwordSection" style="display: none;">
+                                <label class="form-label">Đặt mật khẩu bảo vệ</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" placeholder="Nhập mật khẩu" id="filePassword">
+                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Mật khẩu tối thiểu 6 ký tự</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Send File -->
+                        <div class="mb-3">
+                            <h5><span class="step-number">4</span> Gửi file</h5>
+                            <p class="text-muted">Thêm tin nhắn (tùy chọn) và gửi file</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Tin nhắn</label>
+                                <textarea class="form-control" rows="3" placeholder="Thêm tin nhắn cho người nhận..." id="message"></textarea>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-primary btn-lg" id="sendFileBtn">
+                                    <i class="fas fa-paper-plane me-2"></i> Gửi File Bảo Mật
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Encryption Animation -->
+                <div class="encryption-animation card" id="encryptionAnimation">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-lock me-2"></i> Đang mã hóa và gửi file</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="encryption-visual">
+                            <i class="lock-icon fas fa-lock"></i>
+                            <i class="key-icon fas fa-key"></i>
+                            <i class="file-icon-animated fas fa-file"></i>
+                            <div class="encryption-line"></div>
+                            <div class="pulse"></div>
+                        </div>
+                        
+                        <h5>Đang mã hóa file với AES-256</h5>
+                        <p class="text-muted">File của bạn đang được mã hóa và gửi đi một cách an toàn</p>
+                        
+                        <div class="progress mt-4">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="encryptionProgress"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2">
+                            <small>Bắt đầu</small>
+                            <small id="progressText">0%</small>
+                            <small>Hoàn thành</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Encryption Success -->
+                <div class="encryption-success card" id="encryptionSuccess">
+                    <i class="fas fa-check-circle"></i>
+                    <h3 id="successTitle">File đã được gửi thành công!</h3>
+                    <p class="lead" id="successDetails">Báo cáo dự án.pdf đã được gửi đến Skibidi Pumpkin</p>
+                    <p class="text-muted">File được mã hóa an toàn và chỉ người nhận có thể giải mã</p>
+                    <div class="mt-4">
+                        <button class="btn btn-outline-primary me-2" id="viewDetailsBtn">
+                            <i class="fas fa-eye me-1"></i> Xem chi tiết
+                        </button>
+                        <button class="btn btn-primary" id="sendAnotherBtn">
+                            <i class="fas fa-paper-plane me-1"></i> Gửi file khác
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- User Info Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-user-shield me-2"></i> Thông tin người gửi</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <div class="user-avatar mx-auto mb-3" id="currentUserAvatar">HP</div>
+                            <h5 id="currentUsername">Hoàng Phúc</h5>
+                            <p class="text-muted" id="currentUserRole">Quản trị viên</p>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-paper-plane me-2 text-primary"></i> File đã gửi:</span>
+                            <strong id="sentFilesCount">42</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span><i class="fas fa-inbox me-2 text-success"></i> File đã nhận:</span>
+                            <strong id="receivedFilesCount">28</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span><i class="fas fa-database me-2 text-warning"></i> Dung lượng đã dùng:</span>
+                            <strong id="storageUsed">1.2 GB</strong>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6><i class="fas fa-shield-alt me-2 text-danger"></i> Khóa bảo mật</h6>
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="bg-light p-2 rounded text-center flex-shrink-0 me-3">
+                                <i class="fas fa-key text-primary"></i>
+                                <div class="small mt-1">Khóa công khai</div>
+                            </div>
+                            <div class="small">
+                                <div class="text-truncate" id="publicKey" style="max-width: 200px;">a5f3d9e1b7c8...2046d8e9f7a</div>
+                                <a href="#" class="small">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Transactions -->
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i> Giao dịch gần đây</h5>
+                    </div>
+                    <div class="card-body" id="recentTransactions">
+                        <div class="loading-indicator">
+                            <div class="spinner-border text-success" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Đang tải giao dịch...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5><i class="fas fa-lock-shield me-2"></i> SecureTransfer</h5>
+                    <p class="small">Giải pháp chuyển file bảo mật hàng đầu với mã hóa end-to-end và các tính năng bảo mật nâng cao.</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5>Liên kết nhanh</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white small">Về chúng tôi</a></li>
+                        <li><a href="#" class="text-white small">Tính năng</a></li>
+                        <li><a href="#" class="text-white small">Bảng giá</a></li>
+                        <li><a href="#" class="text-white small">Hỗ trợ</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Kết nối với chúng tôi</h5>
+                    <div class="d-flex mt-3">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook-f fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin-in fa-lg"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-github fa-lg"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-light">
+            <div class="text-center small">
+                &copy; 2023 SecureTransfer. Tất cả quyền được bảo lưu.
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Current user data
+            let currentUser = null;
+            let users = [];
+            let recentTransactions = [];
+            
+            // DOM elements
+            const usersContainer = document.getElementById('usersContainer');
+            const usersLoading = document.getElementById('usersLoading');
+            const usersError = document.getElementById('usersError');
+            const fileDropArea = document.getElementById('fileDropArea');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const fileModified = document.getElementById('fileModified');
+            const removeFileBtn = document.getElementById('removeFileBtn');
+            const sendFileBtn = document.getElementById('sendFileBtn');
+            const encryptionAnimation = document.getElementById('encryptionAnimation');
+            const encryptionSuccess = document.getElementById('encryptionSuccess');
+            const encryptionProgress = document.getElementById('encryptionProgress');
+            const progressText = document.getElementById('progressText');
+            const recentTransactionsContainer = document.getElementById('recentTransactions');
+            const passwordSection = document.getElementById('passwordSection');
+            const togglePassword = document.getElementById('togglePassword');
+            const filePassword = document.getElementById('filePassword');
+            
+            // Initialize page
+            fetchCurrentUser();
+            fetchUsers();
+            fetchRecentTransactions();
+            
+            // Fetch current user data from server
+            function fetchCurrentUser() {
+                fetch('/api/me')
+                    .then(response => response.json())
+                    .then(data => {
+                        currentUser = data;
+                        updateUserInfo();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user data:', error);
+                    });
+            }
+            
+            // Update user info in UI
+            function updateUserInfo() {
+                if (!currentUser) return;
+                
+                document.getElementById('username').textContent = currentUser.username;
+                document.getElementById('userRole').textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Người dùng';
+                document.getElementById('currentUsername').textContent = currentUser.username;
+                document.getElementById('currentUserRole').textContent = currentUser.role === 'admin' ? 'Quản trị viên' : 'Người dùng';
+                
+                // Set avatar initials
+                const avatar = document.getElementById('userAvatar');
+                const currentUserAvatar = document.getElementById('currentUserAvatar');
+                const initials = getInitials(currentUser.username);
+                avatar.textContent = initials;
+                currentUserAvatar.textContent = initials;
+                
+                // Set stats
+                document.getElementById('sentFilesCount').textContent = currentUser.sent_files || 0;
+                document.getElementById('receivedFilesCount').textContent = currentUser.received_files || 0;
+                document.getElementById('storageUsed').textContent = formatFileSize(currentUser.storage_used || 0);
+                
+                // Set public key
+                if (currentUser.public_key) {
+                    const publicKeyEl = document.getElementById('publicKey');
+                    publicKeyEl.textContent = currentUser.public_key.substring(0, 12) + '...' + 
+                                             currentUser.public_key.substring(currentUser.public_key.length - 10);
+                }
+            }
+            
+            // Get initials from username
+            function getInitials(username) {
+                const parts = username.split(' ');
+                if (parts.length === 1) {
+                    return username.substring(0, 2).toUpperCase();
+                }
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            
+            // Fetch users from server
+            function fetchUsers() {
+                usersLoading.style.display = 'block';
+                usersError.style.display = 'none';
+                
+                fetch('/api/users')
+                    .then(response => response.json())
+                    .then(data => {
+                        users = data;
+                        renderUsers();
+                        usersLoading.style.display = 'none';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching users:', error);
+                        usersLoading.style.display = 'none';
+                        usersError.style.display = 'block';
+                        document.getElementById('errorMessage').textContent = 'Không thể tải danh sách người dùng. Vui lòng thử lại sau.';
+                    });
+            }
+            
+            // Render users to UI
+            function renderUsers() {
+                if (!users || users.length === 0) {
+                    usersContainer.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Không có người dùng nào khác trong hệ thống
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                usersContainer.innerHTML = '';
+                
+                users.forEach(user => {
+                    const initials = getInitials(user.username);
+                    const isOnline = Math.random() > 0.3; // Simulate online status
+                    
+                    const userCard = document.createElement('div');
+                    userCard.className = 'col-md-6';
+                    userCard.innerHTML = `
+                        <div class="user-card" data-user-id="${user.id}">
+                            <div class="d-flex align-items-center">
+                                <div class="user-avatar me-3" style="background: ${stringToColor(user.username)}">${initials}</div>
+                                <div>
+                                    <h6 class="mb-0">${user.username}</h6>
+                                    <small class="text-muted">${isOnline ? 'Online' : 'Offline'} 
+                                        <i class="fas fa-circle ms-1" style="font-size: 8px; color: ${isOnline ? '#27ae60' : '#95a5a6'}"></i>
+                                    </small>
+                                </div>
+                            </div>
+                            <span class="security-badge badge ${user.is_verified ? 'bg-success' : 'bg-warning'}">
+                                ${user.is_verified ? 'Đã xác thực' : 'Chưa xác thực'}
+                            </span>
+                        </div>
+                    `;
+                    
+                    usersContainer.appendChild(userCard);
+                });
+                
+                // Add event listeners to user cards
+                const userCards = document.querySelectorAll('.user-card');
+                userCards.forEach(card => {
+                    card.addEventListener('click', function() {
+                        // Remove selected class from all cards
+                        userCards.forEach(c => c.classList.remove('selected'));
+                        
+                        // Add selected class to clicked card
+                        this.classList.add('selected');
+                    });
+                });
+            }
+            
+            // Generate color from string for avatar
+            function stringToColor(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                const hue = hash % 360;
+                return `hsl(${hue}, 70%, 60%)`;
+            }
+            
+            // Fetch recent transactions
+            function fetchRecentTransactions() {
+                fetch('/api/transactions/recent')
+                    .then(response => response.json())
+                    .then(data => {
+                        recentTransactions = data;
+                        renderRecentTransactions();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching transactions:', error);
+                        recentTransactionsContainer.innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Không thể tải giao dịch gần đây
+                            </div>
+                        `;
+                    });
+            }
+            
+            // Render recent transactions
+            function renderRecentTransactions() {
+                if (!recentTransactions || recentTransactions.length === 0) {
+                    recentTransactionsContainer.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-secondary mb-3"></i>
+                            <h5>Chưa có giao dịch nào</h5>
+                            <p class="text-muted">Các giao dịch của bạn sẽ xuất hiện tại đây</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                recentTransactions.forEach(transaction => {
+                    const iconClass = getFileIconClass(transaction.filename);
+                    const statusClass = transaction.status === 'completed' ? 'bg-completed' : 'bg-pending';
+                    const statusText = transaction.status === 'completed' ? 'Hoàn thành' : 'Đang chờ';
+                    
+                    html += `
+                        <div class="recent-file">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <i class="${iconClass} me-2"></i>
+                                    <span class="fw-bold">${transaction.original_filename}</span>
+                                </div>
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="small text-muted">
+                                Gửi đến ${transaction.receiver_name} • ${formatTimeAgo(transaction.created_at)}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Add view all button
+                html += `
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-sm btn-outline-success">Xem tất cả</a>
+                    </div>
+                `;
+                
+                recentTransactionsContainer.innerHTML = html;
+            }
+            
+            // Get file icon class based on file extension
+            function getFileIconClass(filename) {
+                if (!filename) return 'fas fa-file text-secondary';
+                
+                const ext = filename.split('.').pop().toLowerCase();
+                switch(ext) {
+                    case 'pdf': return 'fas fa-file-pdf text-danger';
+                    case 'doc':
+                    case 'docx': return 'fas fa-file-word text-info';
+                    case 'xls':
+                    case 'xlsx': return 'fas fa-file-excel text-success';
+                    case 'jpg':
+                    case 'jpeg':
+                    case 'png':
+                    case 'gif': return 'fas fa-file-image text-primary';
+                    case 'zip':
+                    case 'rar': return 'fas fa-file-archive text-warning';
+                    default: return 'fas fa-file text-secondary';
+                }
+            }
+            
+            // Format time ago
+            function formatTimeAgo(dateString) {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diff = Math.floor((now - date) / 1000); // difference in seconds
+                
+                if (diff < 60) return 'vừa xong';
+                if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+                return `${Math.floor(diff / 86400)} ngày trước`;
+            }
+            
+            // File selection
+            fileDropArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Handle file selection
+            fileInput.addEventListener('change', function(e) {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    
+                    // Update file info
+                    fileName.textContent = file.name;
+                    fileSize.textContent = formatFileSize(file.size);
+                    
+                    // Set modified time
+                    const modifiedDate = new Date(file.lastModified);
+                    fileModified.textContent = modifiedDate.toLocaleString();
+                    
+                    // Show file info
+                    fileInfo.style.display = 'block';
+                }
+            });
+            
+            // Remove file
+            removeFileBtn.addEventListener('click', function() {
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+            });
+            
+            // Security options
+            const securityOptions = document.querySelectorAll('.security-option');
+            
+            securityOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    
+                    const optionType = this.getAttribute('data-option');
+                    
+                    // Show password section if password option is selected
+                    if (optionType === 'password') {
+                        passwordSection.style.display = this.classList.contains('selected') ? 'block' : 'none';
+                    }
+                });
+            });
+            
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = filePassword.getAttribute('type') === 'password' ? 'text' : 'password';
+                filePassword.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+            
+            // Send file button
+            sendFileBtn.addEventListener('click', function() {
+                // Basic validation
+                const selectedUser = document.querySelector('.user-card.selected');
+                const hasFile = fileInput.files.length > 0;
+                
+                if (!selectedUser) {
+                    showAlert('Vui lòng chọn người nhận', 'warning');
+                    return;
+                }
+                
+                if (!hasFile) {
+                    showAlert('Vui lòng chọn file để gửi', 'warning');
+                    return;
+                }
+                
+                const receiverId = selectedUser.getAttribute('data-user-id');
+                const file = fileInput.files[0];
+                const message = document.getElementById('message').value;
+                
+                // Get selected security options
+                const securityOptions = [];
+                document.querySelectorAll('.security-option.selected').forEach(option => {
+                    securityOptions.push(option.getAttribute('data-option'));
+                });
+                
+                const password = filePassword.value;
+                if (securityOptions.includes('password') && password.length < 6) {
+                    showAlert('Mật khẩu phải có ít nhất 6 ký tự', 'warning');
+                    return;
+                }
+                
+                // Show encryption animation
+                encryptionAnimation.style.display = 'block';
+                
+                // Scroll to animation
+                encryptionAnimation.scrollIntoView({ behavior: 'smooth' });
+                
+                // Simulate encryption process
+                let progress = 0;
+                encryptionProgress.style.width = '0%';
+                progressText.textContent = '0%';
+                
+                const interval = setInterval(() => {
+                    progress += 5;
+                    encryptionProgress.style.width = progress + '%';
+                    progressText.textContent = progress + '%';
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // Simulate API call to send file
+                        setTimeout(() => {
+                            encryptionAnimation.style.display = 'none';
+                            
+                            // Update success message
+                            const receiverName = users.find(u => u.id == receiverId)?.username || 'người nhận';
+                            document.getElementById('successTitle').textContent = 'File đã được gửi thành công!';
+                            document.getElementById('successDetails').textContent = `${file.name} đã được gửi đến ${receiverName}`;
+                            
+                            encryptionSuccess.style.display = 'block';
+                            
+                            // Update recent transactions
+                            fetchRecentTransactions();
+                            
+                            // Update user stats
+                            fetchCurrentUser();
+                        }, 1000);
+                    }
+                }, 200);
+            });
+            
+            // View details button
+            document.getElementById('viewDetailsBtn').addEventListener('click', function() {
+                showAlert('Chức năng này sẽ hiển thị chi tiết giao dịch', 'info');
+            });
+            
+            // Send another button
+            document.getElementById('sendAnotherBtn').addEventListener('click', function() {
+                encryptionSuccess.style.display = 'none';
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                document.querySelectorAll('.security-option.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                passwordSection.style.display = 'none';
+                document.getElementById('message').value = '';
+                document.querySelectorAll('.user-card.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            
+            // Format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Drag and drop functionality
+            fileDropArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+            
+            fileDropArea.addEventListener('dragleave', function() {
+                this.classList.remove('dragover');
+            });
+            
+            fileDropArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    
+                    // Trigger change event
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }
+            });
+            
+            // Show alert
+            function showAlert(message, type = 'info') {
+                // Remove existing alerts
+                document.querySelectorAll('.alert-toast').forEach(el => el.remove());
+                
+                // Create alert element
+                const alert = document.createElement('div');
+                alert.className = `alert-toast alert alert-${type} alert-dismissible fade show position-fixed`;
+                alert.style.cssText = 'top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+                alert.innerHTML = `
+                    <strong>${type === 'danger' ? 'Lỗi!' : type === 'warning' ? 'Cảnh báo!' : 'Thông tin!'}</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                
+                // Add to body
+                document.body.appendChild(alert);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }, 5000);
+            }
+        });
+    </script>
+</body>
+</html>

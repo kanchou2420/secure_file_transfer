@@ -1,0 +1,536 @@
+{% extends "base.html" %}
+
+{% block title %}Nhận File Bảo Mật - Secure File Transfer{% endblock %}
+
+{% block page_title %}
+Nhận File Bảo Mật
+{% endblock %}
+
+{% block page_subtitle %}
+Xem các file đang chờ và đã nhận được từ hệ thống chuyển file bảo mật
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Pending Files Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-inbox me-2"></i> File Đang Chờ</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_files %}
+                    <div class="list-group">
+                        {% for file in pending_files %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ file.sender.username }} - {{ file.original_filename }}</h6>
+                                    <div class="d-flex">
+                                        <small class="me-3"><i class="fas fa-clock me-1"></i> {{ file.created_at | format_datetime }}</small>
+                                        <small><i class="fas fa-database me-1"></i> {{ file.file_size|filesizeformat }}</small>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-primary receive-btn" data-transaction-id="{{ file.id }}">
+                                        <i class="fas fa-download me-1"></i> Nhận File
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5>Không có file nào đang chờ</h5>
+                        <p class="text-muted">Tất cả file gửi đến bạn đã được xử lý.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Download Progress -->
+            <div class="card mb-4 d-none" id="progressCard">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-sync-alt fa-spin me-2"></i> Đang nhận file</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="spinner-border text-primary mb-3" role="status" id="transferSpinner">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 id="statusText">Đang xác minh và giải mã file...</h5>
+                        <p class="text-muted mb-0" id="subStatusText">Quá trình này có thể mất vài phút</p>
+                    </div>
+                    
+                    <!-- Progress Bars -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Xác minh người gửi</span>
+                            <span id="verificationPercent">0%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" 
+                                 id="verificationProgress" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Giải mã file</span>
+                            <span id="decryptPercent">0%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                 role="progressbar" 
+                                 id="decryptProgress" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Kiểm tra toàn vẹn</span>
+                            <span id="integrityPercent">0%</span>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" 
+                                 role="progressbar" 
+                                 id="integrityProgress" 
+                                 style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Transfer Details -->
+                    <div class="mt-4 border-top pt-3">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <i class="fas fa-file me-3 mt-1 text-primary"></i>
+                                    <div>
+                                        <p class="mb-0 small text-muted">File</p>
+                                        <p class="mb-0 fw-bold" id="transferFileName">Bao_cao_cuoi_ky.pdf</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <i class="fas fa-user me-3 mt-1 text-primary"></i>
+                                    <div>
+                                        <p class="mb-0 small text-muted">Người gửi</p>
+                                        <p class="mb-0 fw-bold" id="transferSender">Nguyễn Văn A</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <i class="fas fa-database me-3 mt-1 text-primary"></i>
+                                    <div>
+                                        <p class="mb-0 small text-muted">Kích thước</p>
+                                        <p class="mb-0 fw-bold" id="transferFileSize">2.4 MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex">
+                                    <i class="fas fa-shield-alt me-3 mt-1 text-primary"></i>
+                                    <div>
+                                        <p class="mb-0 small text-muted">Bảo mật</p>
+                                        <p class="mb-0 fw-bold" id="transferSecurity">AES-256</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Received Files -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i> File Đã Nhận</h5>
+                </div>
+                <div class="card-body">
+                    {% if received_files %}
+                    <div class="list-group">
+                        {% for file in received_files %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ file.sender.username }} - {{ file.original_filename }}</h6>
+                                    <div class="d-flex">
+                                        <small class="me-3"><i class="fas fa-clock me-1"></i> {{ file.completed_at|format_datetime }}</small>
+                                        <small><i class="fas fa-database me-1"></i> {{ file.file_size|filesizeformat }}</small>
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('download_file', filename=file.filename) }}" class="btn btn-sm btn-success">
+                                        <i class="fas fa-download me-1"></i> Tải Xuống
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-outline-success">Xem tất cả file đã nhận</a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-secondary mb-3"></i>
+                        <h5>Chưa có file nào được nhận</h5>
+                        <p class="text-muted">Các file được gửi đến bạn sẽ xuất hiện tại đây.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Security Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i> Quy Trình Nhận File</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-primary text-white">
+                                <i class="fas fa-bell fa-lg"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Thông báo</h6>
+                                <p class="small">Hệ thống thông báo khi có file mới gửi đến bạn</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-info text-white">
+                                <i class="fas fa-user-check fa-lg"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Xác minh</h6>
+                                <p class="small">Xác minh danh tính người gửi và quyền truy cập của bạn</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-success text-white">
+                                <i class="fas fa-key fa-lg"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Giải mã</h6>
+                                <p class="small">File được giải mã bằng khóa riêng của bạn</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-danger text-white">
+                                <i class="fas fa-shield-check fa-lg"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Kiểm tra</h6>
+                                <p class="small">Kiểm tra toàn vẹn file để đảm bảo không bị thay đổi</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-step">
+                            <div class="timeline-icon bg-dark text-white">
+                                <i class="fas fa-download fa-lg"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <h6>Tải xuống</h6>
+                                <p class="small">File sẵn sàng để tải xuống và sử dụng</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="alert alert-primary">
+                        <h6><i class="fas fa-info-circle me-2"></i>Lưu ý bảo mật</h6>
+                        <p class="small mb-0">
+                            File bạn nhận được đã được mã hóa end-to-end. Chỉ bạn mới có thể giải mã và xem nội dung file.
+                            Không chia sẻ file đã giải mã với người không có quyền truy cập.
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle me-2"></i>Tại sao an toàn?</h6>
+                        <ul class="small">
+                            <li>File luôn được mã hóa trong quá trình truyền và lưu trữ</li>
+                            <li>Chỉ người nhận dự định mới có thể giải mã file</li>
+                            <li>Kiểm tra toàn vẹn file đảm bảo không bị can thiệp</li>
+                            <li>Không lưu trữ file đã giải mã trên máy chủ</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Tips -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Mẹo Bảo Mật</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0 text-info">
+                            <i class="fas fa-lock fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6>Luôn xác minh người gửi</h6>
+                            <p class="small mb-0">Đảm bảo file nhận được từ người bạn biết và tin tưởng.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0 text-info">
+                            <i class="fas fa-virus-slash fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6>Quét virus file nhận được</h6>
+                            <p class="small mb-0">Luôn quét file bằng phần mềm diệt virus trước khi mở.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0 text-info">
+                            <i class="fas fa-trash-alt fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6>Xóa file nhạy cảm sau khi dùng</h6>
+                            <p class="small mb-0">Xóa file khỏi thiết bị sau khi sử dụng xong.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex">
+                        <div class="flex-shrink-0 text-info">
+                            <i class="fas fa-key fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6>Bảo vệ khóa cá nhân</h6>
+                            <p class="small mb-0">Không chia sẻ khóa cá nhân với bất kỳ ai.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .list-group-item {
+        border-left: none;
+        border-right: none;
+        padding: 1.25rem;
+        transition: all 0.3s;
+    }
+    
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+        transform: translateX(3px);
+    }
+    
+    .list-group-item:first-child {
+        border-top: none;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .badge {
+        font-weight: 500;
+        padding: 0.4em 0.75em;
+    }
+    
+    .progress-bar {
+        transition: width 0.5s ease;
+    }
+    
+    /* Timeline styling */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline-step {
+        position: relative;
+        padding-bottom: 20px;
+    }
+    
+    .timeline-step:last-child {
+        padding-bottom: 0;
+    }
+    
+    .timeline-icon {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+    
+    .timeline-content {
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        position: relative;
+    }
+    
+    .timeline-step::before {
+        content: '';
+        position: absolute;
+        left: -20px;
+        top: 40px;
+        bottom: 0;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+    
+    .timeline-step:last-child::before {
+        display: none;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const receiveButtons = document.querySelectorAll('.receive-btn');
+        const progressCard = document.getElementById('progressCard');
+        
+        // Progress elements
+        const verificationProgress = document.getElementById('verificationProgress');
+        const verificationPercent = document.getElementById('verificationPercent');
+        const decryptProgress = document.getElementById('decryptProgress');
+        const decryptPercent = document.getElementById('decryptPercent');
+        const integrityProgress = document.getElementById('integrityProgress');
+        const integrityPercent = document.getElementById('integrityPercent');
+        const statusText = document.getElementById('statusText');
+        const subStatusText = document.getElementById('subStatusText');
+        const transferFileName = document.getElementById('transferFileName');
+        const transferFileSize = document.getElementById('transferFileSize');
+        const transferSender = document.getElementById('transferSender');
+        const transferSecurity = document.getElementById('transferSecurity');
+        const transferSpinner = document.getElementById('transferSpinner');
+        
+        // Add event listeners to all receive buttons
+        receiveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const listItem = this.closest('.list-group-item');
+                const fileName = listItem.querySelector('h6').textContent;
+                const fileSize = listItem.querySelector('small:nth-child(2)').textContent;
+                const sender = listItem.querySelector('h6').textContent.split(' - ')[0];
+                
+                // Update transfer details
+                transferFileName.textContent = fileName.split(' - ')[1];
+                transferFileSize.textContent = fileSize;
+                transferSender.textContent = sender;
+                transferSecurity.textContent = "AES-256";
+                
+                // Hide pending files, show progress
+                document.querySelector('.card-header.bg-primary').closest('.card').classList.add('d-none');
+                progressCard.classList.remove('d-none');
+                
+                // Start the receive process
+                startFileReceive();
+            });
+        });
+        
+        function startFileReceive() {
+            // Step 1: Verification
+            statusText.textContent = "Đang xác minh người gửi...";
+            subStatusText.textContent = "Kiểm tra danh tính người gửi và quyền truy cập của bạn";
+            
+            let verificationProgressValue = 0;
+            const verificationInterval = setInterval(() => {
+                verificationProgressValue += Math.floor(Math.random() * 8) + 1;
+                if (verificationProgressValue >= 100) {
+                    verificationProgressValue = 100;
+                    clearInterval(verificationInterval);
+                    
+                    // Move to next step
+                    setTimeout(startDecryption, 800);
+                }
+                verificationProgress.style.width = verificationProgressValue + '%';
+                verificationPercent.textContent = verificationProgressValue + '%';
+            }, 150);
+            
+            function startDecryption() {
+                statusText.textContent = "Đang giải mã file...";
+                subStatusText.textContent = "File đang được giải mã bằng khóa cá nhân của bạn";
+                
+                let decryptProgressValue = 0;
+                const decryptInterval = setInterval(() => {
+                    decryptProgressValue += Math.floor(Math.random() * 5) + 1;
+                    if (decryptProgressValue >= 100) {
+                        decryptProgressValue = 100;
+                        clearInterval(decryptInterval);
+                        
+                        // Move to next step
+                        setTimeout(startIntegrityCheck, 800);
+                    }
+                    decryptProgress.style.width = decryptProgressValue + '%';
+                    decryptPercent.textContent = decryptProgressValue + '%';
+                }, 100);
+            }
+            
+            function startIntegrityCheck() {
+                statusText.textContent = "Kiểm tra toàn vẹn file...";
+                subStatusText.textContent = "Đảm bảo file không bị thay đổi trong quá trình truyền";
+                
+                let integrityProgressValue = 0;
+                const integrityInterval = setInterval(() => {
+                    integrityProgressValue += Math.floor(Math.random() * 10) + 1;
+                    if (integrityProgressValue >= 100) {
+                        integrityProgressValue = 100;
+                        clearInterval(integrityInterval);
+                        
+                        // Transfer complete
+                        setTimeout(completeReceive, 1000);
+                    }
+                    integrityProgress.style.width = integrityProgressValue + '%';
+                    integrityPercent.textContent = integrityProgressValue + '%';
+                }, 80);
+            }
+            
+            function completeReceive() {
+                statusText.textContent = "File sẵn sàng!";
+                subStatusText.textContent = "File đã được giải mã và kiểm tra thành công";
+                transferSpinner.classList.remove('spinner-border');
+                transferSpinner.classList.add('fa', 'fa-check-circle', 'fa-2x', 'text-success');
+                
+                // Show success message
+                setTimeout(() => {
+                    const successHTML = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <h4 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Nhận file thành công!</h4>
+                            <p>File <strong>${transferFileName.textContent}</strong> đã sẵn sàng để tải xuống.</p>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <a href="#" class="btn btn-outline-success">
+                                    <i class="fas fa-inbox me-2"></i>Xem file khác
+                                </a>
+                                <a href="#" class="btn btn-success">
+                                    <i class="fas fa-download me-2"></i>Tải xuống ngay
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    progressCard.innerHTML = successHTML;
+                }, 1500);
+            }
+        }
+    });
+</script>
+{% endblock %}

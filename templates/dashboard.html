@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Secure File Transfer{% endblock %}
+
+{% block page_title %}
+Dashboard
+{% endblock %}
+
+{% block page_subtitle %}
+Tổng quan hoạt động và quản lý file của bạn
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card bg-gradient h-100">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">File Đã Gửi</h5>
+                            <h2 class="mb-0">{{ total_files_sent }}</h2>
+                        </div>
+                        <div class="icon-circle bg-white text-primary">
+                            <i class="fas fa-paper-plane fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-3">
+            <div class="card bg-gradient h-100">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">File Đã Nhận</h5>
+                            <h2 class="mb-0">{{ total_files_received }}</h2>
+                        </div>
+                        <div class="icon-circle bg-white text-primary">
+                            <i class="fas fa-download fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Giao Dịch Gần Đây</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Thời Gian</th>
+                                    <th>File</th>
+                                    <th>Người Gửi</th>
+                                    <th>Người Nhận</th>
+                                    <th>Trạng Thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for txn in recent_transactions %}
+                                <tr>
+                                    <td>{{ txn.created_at | format_datetime }}</td>
+                                    <td>{{ txn.original_filename }}</td>
+                                    <td>{{ txn.sender.username }}</td>
+                                    <td>{{ txn.receiver.username }}</td>
+                                    <td>
+                                        {% if txn.status == 'completed' %}
+                                        <span class="badge bg-success">Hoàn thành</span>
+                                        {% elif txn.status == 'pending' %}
+                                        <span class="badge bg-warning">Đang chờ</span>
+                                        {% elif txn.status == 'confirmed' %}
+                                        <span class="badge bg-info">Đã xác nhận</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Lỗi</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-secondary mb-3"></i>
+                        <h5>Chưa có giao dịch nào</h5>
+                        <p class="text-muted">Các giao dịch của bạn sẽ xuất hiện tại đây.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

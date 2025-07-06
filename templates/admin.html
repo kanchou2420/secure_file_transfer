@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Secure File Transfer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4e73df;
+            --secondary: #858796;
+            --success: #1cc88a;
+            --info: #36b9cc;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --light: #f8f9fc;
+            --dark: #5a5c69;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(180deg, var(--primary) 10%, #224abe 100%);
+            padding-top: 20px;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            z-index: 100;
+        }
+        
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .sidebar-brand i {
+            margin-right: 10px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            margin: 0.2rem 1rem;
+            border-radius: 0.35rem;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,0.2);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .topbar {
+            background-color: white;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            padding: 0.5rem 1rem;
+            margin-bottom: 20px;
+            border-radius: 0.35rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .topbar h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin: 0;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+            padding: 0.75rem 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .stat-card {
+            border-left: 0.25rem solid var(--primary);
+        }
+        
+        .stat-card.users {
+            border-left-color: var(--primary);
+        }
+        
+        .stat-card.transactions {
+            border-left-color: var(--success);
+        }
+        
+        .stat-card.files {
+            border-left-color: var(--info);
+        }
+        
+        .stat-card.usage {
+            border-left-color: var(--warning);
+        }
+        
+        .stat-card .card-body {
+            padding: 1.25rem;
+        }
+        
+        .stat-card .stat-title {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .stat-card .stat-icon {
+            color: #dddfeb;
+            font-size: 2rem;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .recent-activity .list-group-item {
+            border: none;
+            border-left: 3px solid #e3e6f0;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.35rem;
+        }
+        
+        .recent-activity .list-group-item:hover {
+            background-color: #f8f9fc;
+        }
+        
+        .recent-activity .activity-time {
+            font-size: 0.8rem;
+            color: var(--secondary);
+        }
+        
+        .badge-pill {
+            border-radius: 10rem;
+            padding: 0.5em 0.8em;
+        }
+        
+        .bg-primary { background-color: var(--primary) !important; }
+        .bg-success { background-color: var(--success) !important; }
+        .bg-info { background-color: var(--info) !important; }
+        .bg-warning { background-color: var(--warning) !important; }
+        .bg-danger { background-color: var(--danger) !important; }
+        
+        .text-primary { color: var(--primary) !important; }
+        .text-success { color: var(--success) !important; }
+        .text-info { color: var(--info) !important; }
+        .text-warning { color: var(--warning) !important; }
+        .text-danger { color: var(--danger) !important; }
+        
+        .table th {
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .dataTables_wrapper {
+            padding: 0;
+        }
+        
+        .dataTables_filter input {
+            border-radius: 0.35rem;
+            border: 1px solid #d1d3e2;
+            padding: 0.375rem 0.75rem;
+        }
+        
+        .dataTables_paginate .paginate_button {
+            border-radius: 0.35rem !important;
+            margin: 0 3px;
+            border: 1px solid #d1d3e2 !important;
+        }
+        
+        footer {
+            background-color: white;
+            padding: 1rem;
+            margin-top: 20px;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+            text-align: center;
+            color: var(--secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-shield-alt"></i> SecureTransfer
+        </div>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-users"></i> Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-exchange-alt"></i> Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-file-alt"></i> Files
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-clipboard-list"></i> Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-chart-line"></i> Analytics
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link" href="#">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Topbar -->
+        <div class="topbar">
+            <h1>Admin Dashboard</h1>
+            <div class="user-info">
+                <div class="avatar">A</div>
+                <div>
+                    <div>Admin User</div>
+                    <small class="text-muted">Administrator</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card users h-100">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-title">USERS</div>
+                                <div class="stat-value">3</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-primary stretched-link" href="#">View Details</a>
+                        <div class="small"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card transactions h-100">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-title">TRANSACTIONS</div>
+                                <div class="stat-value">2</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-exchange-alt stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-success stretched-link" href="#">View Details</a>
+                        <div class="small"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card files h-100">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-title">FILES STORED</div>
+                                <div class="stat-value">2</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-file stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-info stretched-link" href="#">View Details</a>
+                        <div class="small"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card stat-card usage h-100">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="stat-title">STORAGE USED</div>
+                                <div class="stat-value">7.8 MB</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-database stat-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a class="small text-warning stretched-link" href="#">View Details</a>
+                        <div class="small"><i class="fas fa-angle-right"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts and Activity Row -->
+        <div class="row">
+            <!-- Activity Chart -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Transfer Activity</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="activityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="recent-activity">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">File Received</h6>
+                                        <small class="activity-time">Just now</small>
+                                    </div>
+                                    <p class="mb-1">admin received <strong>financial_report.xlsx</strong> from pumpkin (đã mã hóa)</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">File Sent</h6>
+                                        <small class="activity-time">5 mins ago</small>
+                                    </div>
+                                    <p class="mb-1">pumpkin sent <strong>project_update.zip</strong> to admin (đã mã hóa)</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">File Sent</h6>
+                                        <small class="activity-time">20 mins ago</small>
+                                    </div>
+                                    <p class="mb-1">skibidi sent <strong>design_specs.pdf</strong> to pumpkin (đã mã hóa)</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">File Received</h6>
+                                        <small class="activity-time">1 hour ago</small>
+                                    </div>
+                                    <p class="mb-1">pumpkin received <strong>marketing_plan.docx</strong> from skibidi (đã mã hóa)</p>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">System Update</h6>
+                                        <small class="activity-time">2 hours ago</small>
+                                    </div>
+                                    <p class="mb-1">Security protocols updated to v2.1.4</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tables Row -->
+        <div class="row">
+            <!-- Recent Users -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">System Users</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="usersTable">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                        <th>Last Active</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white me-2">A</div>
+                                                <div>admin</div>
+                                            </div>
+                                        </td>
+                                        <td>Admin</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td>Online now</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-info text-white me-2">S</div>
+                                                <div>skibidi</div>
+                                            </div>
+                                        </td>
+                                        <td>User</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td>20 mins ago</td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-warning text-white me-2">P</div>
+                                                <div>pumpkin</div>
+                                            </div>
+                                        </td>
+                                        <td>User</td>
+                                        <td><span class="badge bg-success">Active</span></td>
+                                        <td>5 mins ago</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions -->
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="transactionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>File</th>
+                                        <th>Sender ➔ Receiver</th>
+                                        <th>Security</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>#TX-1001</td>
+                                        <td>financial_report.xlsx</td>
+                                        <td>pumpkin ➔ admin</td>
+                                        <td>AES-256</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TX-1000</td>
+                                        <td>project_update.zip</td>
+                                        <td>pumpkin ➔ admin</td>
+                                        <td>AES-256</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TX-0999</td>
+                                        <td>design_specs.pdf</td>
+                                        <td>skibidi ➔ pumpkin</td>
+                                        <td>AES-256</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TX-0998</td>
+                                        <td>marketing_plan.docx</td>
+                                        <td>skibidi ➔ pumpkin</td>
+                                        <td>AES-256</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#TX-0997</td>
+                                        <td>budget_2023.xlsx</td>
+                                        <td>admin ➔ skibidi</td>
+                                        <td>AES-256</td>
+                                        <td><span class="badge bg-success">Completed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Transfer Logs -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">File Transfer Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-primary mb-4">
+                                    <div class="card-header bg-primary text-white">
+                                        <h6 class="mb-0">Skibidi ➔ Pumpkin</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5>design_specs.pdf</h5>
+                                        <p class="mb-1"><strong>Kích thước:</strong> 2.4 MB</p>
+                                        <p class="mb-1"><strong>Thời gian:</strong> 20 phút trước</p>
+                                        <p class="mb-1"><strong>Trạng thái:</strong> Hoàn thành</p>
+                                        <p class="mb-0"><strong>Bảo mật:</strong> <span class="text-success">Đã mã hóa AES-256</span></p>
+                                        <hr>
+                                        <p class="mb-0"><i class="fas fa-shield-alt me-2"></i>File đã được mã hóa end-to-end và chuyển thành công</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card border-success mb-4">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">Pumpkin ➔ Admin</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5>project_update.zip</h5>
+                                        <p class="mb-1"><strong>Kích thước:</strong> 5.4 MB</p>
+                                        <p class="mb-1"><strong>Thời gian:</strong> 5 phút trước</p>
+                                        <p class="mb-1"><strong>Trạng thái:</strong> Hoàn thành</p>
+                                        <p class="mb-0"><strong>Bảo mật:</strong> <span class="text-success">Đã mã hóa AES-256</span></p>
+                                        <hr>
+                                        <p class="mb-0"><i class="fas fa-shield-alt me-2"></i>File đã được mã hóa end-to-end và chuyển thành công</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <div class="text-center">
+                <p class="mb-0">Secure File Transfer System &copy; 2023</p>
+                <small>v2.1.3 | Last updated: October 15, 2023</small>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        // Initialize DataTables
+        $(document).ready(function() {
+            $('#usersTable').DataTable({
+                "paging": true,
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": true,
+                "ordering": true,
+                "info": false,
+                "autoWidth": false
+            });
+            
+            $('#transactionsTable').DataTable({
+                "paging": true,
+                "pageLength": 5,
+                "lengthChange": false,
+                "searching": true,
+                "ordering": true,
+                "info": false,
+                "autoWidth": false
+            });
+        });
+        
+        // Activity Chart
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        const activityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Skibidi', 'Pumpkin', 'Admin'],
+                datasets: [{
+                    label: 'Files Sent',
+                    data: [2, 2, 1],
+                    backgroundColor: '#4e73df',
+                    borderColor: '#4e73df',
+                    borderWidth: 1
+                }, {
+                    label: 'Files Received',
+                    data: [0, 2, 2],
+                    backgroundColor: '#1cc88a',
+                    borderColor: '#1cc88a',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Update stats every 5 seconds (demo only)
+        setInterval(() => {
+            // Simulate live data updates
+            const transactionsValue = document.querySelector('.stat-card.transactions .stat-value');
+            const currentTransactions = parseInt(transactionsValue.textContent);
+            transactionsValue.textContent = currentTransactions + 1;
+            
+            // Update chart data
+            activityChart.data.datasets[0].data = activityChart.data.datasets[0].data.map(() => 
+                Math.floor(Math.random() * 5)
+            );
+            activityChart.data.datasets[1].data = activityChart.data.datasets[1].data.map(() => 
+                Math.floor(Math.random() * 5)
+            );
+            activityChart.update();
+        }, 5000);
+    </script>
+</body>
+</html>
